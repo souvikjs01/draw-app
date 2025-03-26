@@ -6,6 +6,7 @@ import { CreateUserSchema, SigninSchema, CreateRoomSchema } from "@repo/common";
 import { prisma } from "@repo/db"
 import cors from "cors";
 import bcrypt from "bcryptjs";
+import middleware from "./middleware.js";
 
 const app = express();
 app.use(express.json());
@@ -76,8 +77,33 @@ app.post("/signin", async (req, res) => {
     res.json({ message: "Login successful!", token });
 })
 
-app.post('/room', async (req, res) => {
+app.post('/room', middleware, async (req, res) => {
+    const parsedData = CreateRoomSchema.safeParse(req.body)
+    if(!parsedData.success) {
+        res.json({
+            message: "Incorrect inputs"
+        })
+        return;
+    }
     
+    const userId = req.userId ?? ""
+    try {
+        const room = await prisma.room.create({
+            data: {
+                slug: parsedData.data.name,
+                adminId: userId
+            }
+        })
+
+        res.status(200).json({
+            roomId: room.id
+        })
+    } catch (error) {
+        console.log("error " + error);
+        res.status(411).json({
+            message: "Room already exists with the name"
+        })
+    }
 })
 
 app.listen(8000, () => {
