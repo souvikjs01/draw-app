@@ -1,6 +1,6 @@
 import express from "express";
 import jwt from "jsonwebtoken";
-import { JWT_SECRET } from '@repo/backend-common/config';
+import { JWT_SECRET } from '@repo/backend-common';
 // import { middleware } from "./middleware";
 import { CreateUserSchema, SigninSchema, CreateRoomSchema } from "@repo/common";
 import { prisma } from "@repo/db"
@@ -39,9 +39,46 @@ app.post("/signup", async (req, res) => {
     }
 })
 
-// app.post('/signin', async (req, res) => {
 
-// })
+app.post("/signin", async (req, res) => {
+    const parsedData = SigninSchema.safeParse(req.body);
+    if (!parsedData.success) {
+        res.json({
+            message: "Incorrect inputs"
+        })
+        return;
+    }
+
+    // TODO: Compare the hashed pws here
+    const user = await prisma.user.findUnique({
+        where: {
+            email: parsedData.data.username,
+        }
+    })
+
+    if (!user) {
+        res.status(403).json({
+            message: "Invalid credintials"
+        })
+        return;
+    }
+
+    const validPassword = await bcrypt.compare(parsedData.data.password, user.password)
+    if (!validPassword) {
+        res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign({
+        userId: user.id
+    }, JWT_SECRET)
+
+    res.json({ message: "Login successful!", token });
+})
+
+app.post('/room', async (req, res) => {
+    
+})
 
 app.listen(8000, () => {
     console.log("server is running on the port 8000...");

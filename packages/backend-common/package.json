@@ -4,10 +4,12 @@
   "description": "",
   "main": "index.js",
   "exports": {
-    "./config": "./src/index.ts"
+    ".": "./dist/index.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "dev": "tsc --watch"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*"
