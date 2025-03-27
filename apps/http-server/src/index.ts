@@ -106,6 +106,34 @@ app.post('/room', middleware, async (req, res) => {
     }
 })
 
+app.get("/chats/:roomId", async (req, res) => {
+    const roomId = parseInt(req.params.roomId, 10);
+    if (isNaN(roomId)) {
+        res.status(400).json({ message: "Invalid room ID" });
+    }    
+    try {
+        const roomChats = await prisma.chat.findMany({
+            where: {
+                roomId,
+            },
+            orderBy: {
+                id: "desc"
+            },
+            take: 50  
+        }) 
+        if (roomChats.length === 0) {
+            res.status(404).json({ message: "No messages found" });
+            return
+        }
+
+        res.status(200).json({ roomChats });
+    } catch (error) {
+        console.error("Error fetching chats:", error);
+        res.status(500).json({ message: "Internal server error", roomChats: [] });
+    }
+    
+})
+
 app.listen(8000, () => {
     console.log("server is running on the port 8000...");
 })
