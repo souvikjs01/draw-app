@@ -107,10 +107,7 @@ app.post('/room', middleware, async (req, res) => {
 })
 
 app.get("/chats/:roomId", async (req, res) => {
-    const roomId = parseInt(req.params.roomId, 10);
-    if (isNaN(roomId)) {
-        res.status(400).json({ message: "Invalid room ID" });
-    }    
+    const roomId = parseInt(req.params.roomId);   
     try {
         const roomChats = await prisma.chat.findMany({
             where: {
